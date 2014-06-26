@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="VoipSecure" default="all" basedir=".">
+	<description> VoipSecure </description>
+	
+	<!-- ================== Property Definitions ===================== -->    
+    <property file="build.properties"/>   
+    <property file="${user.home}/build.properties"/>  
+    
+    <!-- ================= File and Directory Names ==================== -->    
+    <property name="app.name"  value="VoipSecure"/>   
+    <property name="app.version" value="0.0.1"/>   
+    <property name="build.home" value="${basedir}/build"/>   
+    <property name="dist.home" value="${basedir}/dist"/>   
+    <property name="docs.home"     value="${basedir}/docs"/>   
+    <property name="src.home"  value="${basedir}/src"/>   
+    <property name="media.home" value="${basedir}/media"/>  
+    <property name="config.home" value="${basedir}/config"/> 
+    <!-- ================== External Dependencies ======================= -->
+	<property name="shared.lib" value="${basedir}/lib"/>  
+	<property name="sip.jar"  value="sip.jar"/>
+	<property name="bcprov.jar" value="bcprov.jar"/>
+	<property name="bcpg.jar" value="bcpg.jar"/>
+	
+	<!-- ================== Compilation Classpath ======================= -->
+	<path id="compile.classpath">     
+        <pathelement location="${src.home}"/>         
+        <fileset dir="${shared.lib}">       
+            <include name="*.jar"/>     
+        </fileset>   
+    </path>
+    
+     <!-- =================== All Target ================================ -->
+    <!--     The "all" target is a shortcut for running the "clean" target
+    followed by the "compile" target, to force a complete recompile. -->      
+    <target name="all" depends="clean,compile,dist"
+            description="Clean build and dist directories, then compile"/>
+     
+    <!-- ================== Clean Target ============================== -->    
+    <target name="clean"    description="Delete old build and dist directories">     
+        <delete dir="${build.home}"/>     
+        <delete dir="${dist.home}"/>   
+    </target>
+    
+     <!-- ================== Compile Target =========================== -->      
+    <target name="compile" depends="prepare" description="Compile Java sources">     
+        <mkdir dir="${build.home}/bin"/>    
+        <javac srcdir="${src.home}"           destdir="${build.home}/bin">         
+            <classpath refid="compile.classpath"/>     
+        </javac>     
+        <copy todir="${build.home}/media">       
+            <fileset dir="${media.home}" excludes="**/*.java **/*.bak **/*.log*"/>     
+        </copy>   
+    </target>
+    
+    <!-- =================== Dist Target ================================ -->      
+    <target name="dist" depends="compile,javadoc" description="Create binary distribution">     
+        <basename property="basedir.name" file="."/>      
+        <mkdir dir="${dist.home}/docs"/>
+    	<mkdir dir="${dist.home}/media"/>
+    	<mkdir dir="${dist.home}/lib"/>       
+        <mkdir dir="${dist.home}/config"/>
+    	<mkdir dir="${dist.home}/log"/>
+    	
+        <jar jarfile="${dist.home}/lib/${app.name}_${app.version}.jar"          
+             basedir="${build.home}/bin" excludes="**/*.bak"/>      
+        <copy todir="${dist.home}/lib">       
+            <fileset dir="${build.home}/lib" excludes="**/*.bak"/>     
+        </copy>
+    	
+    	<copy todir="${dist.home}/config">
+    		<fileset dir="${config.home}" includes="config.cfg"/>
+    	</copy>  
+        <copy todir="${dist.home}/media">       
+            <fileset dir="${media.home}" excludes="**/*.bak"/>     
+        </copy>      
+        <zip destfile="${dist.home}/${app.name}_${DSTAMP}${TSTAMP}.zip" basedir="${dist.home}"
+        excludes="**/*.bak **/*.log*" update="true" />    
+    </target>
+	
+	<!-- ================== Javadoc Target ============================ -->      
+    <target name="javadoc" depends="compile" description="Create Javadoc API documentation">      
+        <mkdir dir="${dist.home}/docs"/>     
+        <javadoc sourcepath="${src.home}"
+                 destdir="${dist.home}/docs"
+                 packagenames="*">       
+            <classpath refid="compile.classpath"/>     
+        </javadoc>    
+    </target>
+    
+    <!-- ================== Prepare Target ============================= -->    
+    <target name="prepare">     
+        <tstamp/>     
+        <mkdir dir="${build.home}"/>     
+        <mkdir dir="${build.home}/bin"/>     
+        <mkdir dir="${build.home}/lib"/>
+        <mkdir dir="${build.home}/log"/>
+        <mkdir dir="${build.home}/config"/>
+        <mkdir dir="${build.home}/media"/>
+             
+        <copy todir="${build.home}/lib">
+            <!-- Includere qui le librerie esterne da importare nel progetto
+            ed indicate in "External Dependencies" -->        
+            <fileset dir="${shared.lib}" includes="${sip.jar}"/>
+            <fileset dir="${shared.lib}" includes="${bcpg.jar}"/> 
+            <fileset dir="${shared.lib}" includes="${bcprov.jar}"/>
+            
+        </copy>
+        <copy todir="${build.home}/config">
+        	<fileset dir="${config.home}" includes="config.cfg"/>
+        </copy>   
+    </target>	
+</project>
